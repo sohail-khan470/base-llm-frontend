@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { EventSourcePolyfill } from "event-source-polyfill";
+import { Send, Bot, Sparkles, MessageCircle, Upload } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
-import { Send, Bot, Sparkles, MessageCircle } from "lucide-react";
 
 function App() {
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [qaPairs, setQAPairs] = useState([]);
 
   const responseRef = useRef(null);
   const abortCtrlRef = useRef(null);
@@ -19,7 +20,6 @@ function App() {
     setLoading(true);
     setResponse("");
 
-    // Abort previous stream if exists
     if (abortCtrlRef.current) {
       abortCtrlRef.current.abort();
     }
@@ -64,7 +64,34 @@ function App() {
     setPrompt("");
   };
 
-  // Auto-scroll
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:3008/api/ai/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setQAPairs((prev) => [...prev, result.qa]);
+      setFile(null);
+    } catch (err) {
+      console.error("File upload error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (responseRef.current) {
       responseRef.current.scrollTop = responseRef.current.scrollHeight;
@@ -73,7 +100,6 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-950 via-purple-950 to-pink-950 relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -81,7 +107,6 @@ function App() {
       </div>
 
       <div className="relative z-10 flex flex-col h-screen max-w-7xl mx-auto w-full p-2 sm:p-4 lg:p-8">
-        {/* Header */}
         <div className="text-center mb-4 sm:mb-6 lg:mb-8">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="relative">
@@ -97,34 +122,46 @@ function App() {
           </p>
         </div>
 
-        {/* Chat Container */}
         <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-          {/* Messages Area */}
           <div
             ref={responseRef}
             className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4"
           >
-            {!response && !loading ? (
+            {!response && !loading && qaPairs.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-12">
                 <MessageCircle className="w-16 h-16 text-gray-400 mb-4 opacity-50" />
                 <p className="text-gray-400 text-xl mb-2">
                   Welcome to Ollama Chat
                 </p>
                 <p className="text-gray-500">
-                  Start a conversation by typing your message below
+                  Start a conversation or upload a file below
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
-                {/* AI Response */}
-                <div className="flex gap-4 animate-fade-in">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Bot className="w-6 h-6 text-white" />
+                {qaPairs.map((qa, index) => (
+                  <div key={index} className="flex gap-4 animate-fade-in">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+                      <p className="text-gray-100 font-semibold">
+                        Q: {qa.question}
+                      </p>
+                      <p className="text-gray-300 mt-2">A: {qa.answer}</p>
                     </div>
                   </div>
-                  <div className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
-                    {response ? (
+                ))}
+                {response && (
+                  <div className="flex gap-4 animate-fade-in">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <Bot className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
                       <ReactMarkdown
                         components={{
                           p: ({ node, ...props }) => (
@@ -138,7 +175,6 @@ function App() {
                               className || ""
                             );
                             const language = match ? match[1] : "";
-
                             if (!inline) {
                               return (
                                 <div className="my-4 rounded-xl overflow-hidden border border-purple-500/30 shadow-xl">
@@ -174,7 +210,6 @@ function App() {
                                 </div>
                               );
                             }
-
                             return (
                               <code
                                 className="bg-purple-900/40 backdrop-blur-sm text-purple-200 px-2 py-1 rounded-md font-mono text-sm border border-purple-500/20"
@@ -225,28 +260,28 @@ function App() {
                       >
                         {response}
                       </ReactMarkdown>
-                    ) : loading ? (
-                      <div className="flex items-center gap-3">
-                        <LoadingSpinner size="sm" className="border-blue-400" />
-                        <span className="text-gray-300">AI is thinking...</span>
-                      </div>
-                    ) : null}
-                    {loading && response && (
-                      <div className="flex items-center gap-2 mt-3">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-150"></div>
-                        <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse delay-300"></div>
-                      </div>
-                    )}
+                      {loading && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-150"></div>
+                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse delay-300"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
+                {loading && !response && (
+                  <div className="flex items-center gap-3">
+                    <LoadingSpinner size="sm" className="border-blue-400" />
+                    <span className="text-gray-300">AI is thinking...</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Input Area */}
           <div className="p-3 sm:p-4 lg:p-6 border-t border-white/10 bg-white/5">
-            <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4">
+            <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4 mb-4">
               <div className="flex-1 relative">
                 <input
                   type="text"
@@ -283,7 +318,42 @@ function App() {
               </button>
             </form>
 
-            {/* Status indicator */}
+            <form onSubmit={handleFileUpload} className="flex gap-2 sm:gap-4">
+              <div className="flex-1 relative">
+                <input
+                  type="file"
+                  accept=".pdf,.txt,.docx"
+                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 hover:bg-white/15 text-sm sm:text-base"
+                  onChange={(e) => setFile(e.target.files[0])}
+                  disabled={loading}
+                />
+                <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
+                  <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="group bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 hover:from-green-700 hover:via-teal-700 hover:to-blue-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                disabled={loading || !file}
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" className="border-white" />
+                    <span className="hidden md:inline text-sm sm:text-base">
+                      Uploading...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    <span className="hidden md:inline font-medium text-sm sm:text-base">
+                      Upload
+                    </span>
+                  </>
+                )}
+              </button>
+            </form>
+
             <div className="flex items-center justify-center mt-3 sm:mt-4">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
                 <div
@@ -291,13 +361,12 @@ function App() {
                     loading ? "bg-yellow-500 animate-pulse" : "bg-green-500"
                   }`}
                 ></div>
-                <span>{loading ? "AI is responding..." : "Ready to chat"}</span>
+                <span>{loading ? "Processing..." : "Ready to chat"}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-400 text-sm">
             Press{" "}
@@ -311,7 +380,6 @@ function App() {
         </div>
       </div>
 
-      {/* Floating particles animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <div
@@ -357,7 +425,6 @@ function App() {
           animation: float linear infinite;
         }
 
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 6px;
         }
@@ -376,12 +443,10 @@ function App() {
           background: rgba(147, 51, 234, 0.7);
         }
 
-        /* Syntax highlighting for code */
         .syntax-highlight {
           color: #e2e8f0;
         }
 
-        /* Keywords */
         .syntax-highlight:has-text("def"),
         .syntax-highlight:has-text("function"),
         .syntax-highlight:has-text("const"),
@@ -398,7 +463,6 @@ function App() {
           color: #c084fc;
         }
 
-        /* Better responsive design */
         @media (max-width: 640px) {
           .chat-container {
             margin: 0.5rem;
