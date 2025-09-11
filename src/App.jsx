@@ -14,7 +14,8 @@ import "./App.css";
 
 function App() {
   const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [currentResponse, setCurrentResponse] = useState("");
@@ -38,13 +39,12 @@ function App() {
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false);
         setIsIdle(true);
-      }, 10000); // 10 seconds of inactivity
+      }, 10000);
     };
 
     window.addEventListener("keydown", handleActivity);
     window.addEventListener("mousemove", handleActivity);
 
-    // Start the timer initially
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       setIsIdle(true);
@@ -78,12 +78,11 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || chatLoading) return;
 
-    setLoading(true);
+    setChatLoading(true);
     setCurrentResponse("");
 
-    // Add user message to conversation history immediately
     const userMessage = {
       role: "user",
       content: prompt,
@@ -100,7 +99,7 @@ function App() {
     const sseUrl = "http://localhost:3008/api/ai/chat";
     const body = JSON.stringify({
       prompt,
-      useContext: true, // Flag to use context from vector store
+      useContext: true,
     });
 
     try {
@@ -122,7 +121,6 @@ function App() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          // Add completed AI response to conversation history
           const aiMessage = {
             role: "assistant",
             content: aiResponse,
@@ -130,7 +128,7 @@ function App() {
           };
           setConversations((prev) => [...prev, aiMessage]);
           setCurrentResponse("");
-          setLoading(false);
+          setChatLoading(false);
           abortCtrlRef.current = null;
           break;
         }
@@ -142,7 +140,6 @@ function App() {
     } catch (err) {
       if (err.name !== "AbortError") {
         console.error("Stream error:", err);
-        // Add error message to conversation history
         const errorMessage = {
           role: "assistant",
           content: "Sorry, I encountered an error processing your request.",
@@ -150,7 +147,7 @@ function App() {
           isError: true,
         };
         setConversations((prev) => [...prev, errorMessage]);
-        setLoading(false);
+        setChatLoading(false);
       }
       abortCtrlRef.current = null;
     }
@@ -160,9 +157,9 @@ function App() {
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || fileUploadLoading) return;
 
-    setLoading(true);
+    setFileUploadLoading(true);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -173,33 +170,38 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Upload failed with status ${response.status}`
+        );
       }
 
       const result = await response.json();
-      // Refresh collection status after upload
       fetchCollectionStatus();
 
-      // Show success message
       const successMessage = {
         role: "system",
-        content: `File "${file.name}" uploaded successfully and added to knowledge base. ${result.embeddingsCount} embeddings created.`,
+        content: `File "${file.name}" uploaded successfully! ${result.chunksStored} chunks processed.`,
         timestamp: new Date(),
         isSystem: true,
       };
       setConversations((prev) => [...prev, successMessage]);
       setFile(null);
+
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = "";
     } catch (err) {
       console.error("File upload error:", err);
       const errorMessage = {
         role: "system",
-        content: `Error uploading file: ${err.message}`,
+        content: `Error: ${err.message}`,
         timestamp: new Date(),
         isError: true,
       };
       setConversations((prev) => [...prev, errorMessage]);
     } finally {
-      setLoading(false);
+      setFileUploadLoading(false);
     }
   };
 
@@ -239,11 +241,6 @@ function App() {
     }
   };
 
-  const toggleContextUsage = async () => {
-    // This would be implemented if you want to add a toggle for context usage
-    // You would need to add state to track this preference
-  };
-
   useEffect(() => {
     if (responseRef.current) {
       responseRef.current.scrollTop = responseRef.current.scrollHeight;
@@ -281,10 +278,6 @@ function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-sm text-gray-300">
-              <Database className="w-4 h-4" />
-              <span>{collectionStatus.count} embeddings</span>
-            </div> */}
             {collectionStatus.exists && (
               <button
                 onClick={clearCollection}
@@ -307,7 +300,7 @@ function App() {
             ref={responseRef}
             className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4"
           >
-            {conversations.length === 0 && !loading ? (
+            {conversations.length === 0 && !chatLoading ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-12">
                 <MessageCircle className="w-16 h-16 text-gray-400 mb-4 opacity-50" />
                 <p className="text-gray-400 text-xl mb-2">
@@ -468,7 +461,7 @@ function App() {
                   ))}
                 </div>
 
-                {loading && currentResponse && (
+                {chatLoading && currentResponse && (
                   <div className="flex gap-4 animate-fade-in">
                     <div className="flex-shrink-0">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -583,7 +576,7 @@ function App() {
                   </div>
                 )}
 
-                {loading && !currentResponse && (
+                {chatLoading && !currentResponse && (
                   <div className="flex items-center gap-3">
                     <LoadingSpinner size="sm" className="border-blue-400" />
                     <span className="text-gray-300">AI is thinking...</span>
@@ -602,7 +595,7 @@ function App() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Type your message here..."
-                  disabled={loading}
+                  disabled={chatLoading || fileUploadLoading}
                 />
                 <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
                   <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -611,9 +604,9 @@ function App() {
               <button
                 type="submit"
                 className="group bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                disabled={loading || !prompt.trim()}
+                disabled={chatLoading || fileUploadLoading || !prompt.trim()}
               >
-                {loading ? (
+                {chatLoading ? (
                   <>
                     <LoadingSpinner size="sm" className="border-white" />
                     <span className="hidden md:inline text-sm sm:text-base">
@@ -635,10 +628,19 @@ function App() {
               <div className="flex-1 relative">
                 <input
                   type="file"
-                  accept=".pdf,.txt,.docx,.md"
+                  accept=".pdf,.txt,.docx,.csv,.xlsx,.xls,.md"
                   className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 hover:bg-white/15 text-sm sm:text-base"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  disabled={loading}
+                  onChange={(e) => {
+                    const selectedFile = e.target.files[0];
+                    console.log("File selected:", selectedFile);
+                    if (selectedFile) {
+                      // REMOVE the frontend validation - let backend handle it
+                      setFile(selectedFile);
+                    } else {
+                      setFile(null);
+                    }
+                  }}
+                  disabled={chatLoading || fileUploadLoading}
                 />
                 <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
                   <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -647,9 +649,9 @@ function App() {
               <button
                 type="submit"
                 className="group bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 hover:from-green-700 hover:via-teal-700 hover:to-blue-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                disabled={loading || !file}
+                disabled={chatLoading || fileUploadLoading || !file}
               >
-                {loading ? (
+                {fileUploadLoading ? (
                   <>
                     <LoadingSpinner size="sm" className="border-white" />
                     <span className="hidden md:inline text-sm sm:text-base">
@@ -671,10 +673,18 @@ function App() {
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
                 <div
                   className={`w-2 h-2 rounded-full ${
-                    loading ? "bg-yellow-500 animate-pulse" : "bg-green-500"
+                    chatLoading || fileUploadLoading
+                      ? "bg-yellow-500 animate-pulse"
+                      : "bg-green-500"
                   }`}
                 ></div>
-                <span>{loading ? "Processing..." : "Ready to chat"}</span>
+                <span>
+                  {chatLoading
+                    ? "Processing..."
+                    : fileUploadLoading
+                    ? "Uploading..."
+                    : "Ready to chat"}
+                </span>
               </div>
 
               <div className="text-xs text-gray-500">
