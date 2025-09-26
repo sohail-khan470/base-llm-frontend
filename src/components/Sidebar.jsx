@@ -20,12 +20,12 @@ export default function Sidebar({ isOpen, onClose, onSelectConversation }) {
 
   return (
     <div
-      className={`fixed md:static top-0 left-0 h-full w-64 bg-gray-900/95 backdrop-blur-lg border-r border-white/10 p-4 flex flex-col transform transition-transform duration-300 z-50
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      className={`fixed top-0 left-0 h-full w-64 bg-gray-900/95 backdrop-blur-lg border-r border-white/10 p-4 flex flex-col transform transition-transform duration-300 z-50
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
     >
-      {/* Close button (only visible on mobile) */}
+      {/* Close button */}
       <button
-        className="md:hidden self-end text-gray-400 hover:text-white mb-4"
+        className="self-end text-gray-400 hover:text-white mb-4"
         onClick={onClose}
       >
         <X size={24} />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Message from "../components/Message";
 import StreamingMessage from "../components/StreamingMessage";
@@ -10,7 +10,6 @@ import StatusBar from "../components/StatusBar";
 import EmptyState from "../components/EmptyState";
 import BackgroundEffects from "../components/BackgroundEffects";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Sidebar from "../components/Sidebar";
 import "../App.css";
 import api from "../api/api";
 
@@ -27,20 +26,29 @@ function Home() {
   });
   const [isTyping, setIsTyping] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
-  const typingTimeoutRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isNewChat, setIsNewChat] = useState(true);
+  const typingTimeoutRef = useRef(null);
 
   const responseRef = useRef(null);
   const abortCtrlRef = useRef(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3008/api";
 
   // Fetch collection status on mount
   useEffect(() => {
     fetchCollectionStatus();
   }, []);
+
+  // Reset state when navigating to home
+  useEffect(() => {
+    if (location.pathname === "/") {
+      setConversations([]);
+      setCurrentResponse("");
+      setIsNewChat(true);
+    }
+  }, [location.pathname]);
 
   const fetchCollectionStatus = async () => {
     try {
@@ -241,18 +249,6 @@ function Home() {
     }
   };
 
-  const handleSelectConversation = (chatId) => {
-    if (chatId === "new") {
-      // Only clear the UI, don't create a new chat in DB yet
-      setConversations([]);
-      setCurrentResponse("");
-      setIsNewChat(true);
-    } else {
-      navigate(`/chat/${chatId}`);
-    }
-    setSidebarOpen(false);
-  };
-
   useEffect(() => {
     if (responseRef.current) {
       responseRef.current.scrollTop = responseRef.current.scrollHeight;
@@ -260,89 +256,76 @@ function Home() {
   }, [conversations, currentResponse]);
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <>
       <BackgroundEffects isTyping={isTyping} isIdle={isIdle} />
 
-      <div className="relative z-10 flex h-screen max-w-7xl mx-auto w-full p-2 sm:p-4 lg:p-8">
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onSelectConversation={handleSelectConversation}
-        />
-        <div className="flex flex-col flex-1 ml-4">
-          <Header
-            collectionStatus={collectionStatus}
-            onClearCollection={clearCollection}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-          <p className="text-gray-300 text-sm sm:text-base lg:text-lg text-center mb-6">
-            Powered by AI • Real-time streaming responses • ChromaDB knowledge
-            base
-          </p>
-          <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-            <div
-              ref={responseRef}
-              className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4"
-            >
-              {conversations.length === 0 && !chatLoading ? (
-                <EmptyState />
-              ) : (
-                <>
-                  <div className="space-y-6">
-                    {conversations.map((message, index) => (
-                      <Message key={index} message={message} />
-                    ))}
-                  </div>
+      <Header
+        collectionStatus={collectionStatus}
+        onClearCollection={clearCollection}
+      />
+      <p className="text-gray-300 text-sm sm:text-base lg:text-lg text-center mb-6">
+        Powered by AI • Real-time streaming responses • ChromaDB knowledge base
+      </p>
+      <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+        <div
+          ref={responseRef}
+          className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4"
+        >
+          {conversations.length === 0 && !chatLoading ? (
+            <EmptyState />
+          ) : (
+            <>
+              <div className="space-y-6">
+                {conversations.map((message, index) => (
+                  <Message key={index} message={message} />
+                ))}
+              </div>
 
-                  {chatLoading && currentResponse && (
-                    <StreamingMessage
-                      currentResponse={currentResponse}
-                      isLoading={chatLoading}
-                    />
-                  )}
-
-                  {chatLoading && !currentResponse && <ThinkingMessage />}
-                </>
+              {chatLoading && currentResponse && (
+                <StreamingMessage
+                  currentResponse={currentResponse}
+                  isLoading={chatLoading}
+                />
               )}
-            </div>
 
-            <div className="p-3 sm:p-4 lg:p-6 border-t border-white/10 bg-white/5">
-              <ChatInput
-                prompt={prompt}
-                setPrompt={setPrompt}
-                onSubmit={handleSubmit}
-                isLoading={chatLoading}
-                fileUploadLoading={fileUploadLoading}
-              />
+              {chatLoading && !currentResponse && <ThinkingMessage />}
+            </>
+          )}
+        </div>
 
-              <FileUpload
-                onFileUpload={handleFileUpload}
-                setFile={setFile}
-                isLoading={chatLoading}
-                fileUploadLoading={fileUploadLoading}
-              />
+        <div className="p-3 sm:p-4 lg:p-6 border-t border-white/10 bg-white/5">
+          <ChatInput
+            prompt={prompt}
+            setPrompt={setPrompt}
+            onSubmit={handleSubmit}
+            isLoading={chatLoading}
+            fileUploadLoading={fileUploadLoading}
+          />
 
-              <StatusBar
-                chatLoading={chatLoading}
-                fileUploadLoading={fileUploadLoading}
-                collectionStatus={collectionStatus}
-              />
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <p className="text-gray-400 text-sm">
-              Press{" "}
-              <kbd className="px-2 py-1 bg-white/10 rounded text-xs">Enter</kbd>{" "}
-              to send •
-              <kbd className="px-2 py-1 bg-white/10 rounded text-xs ml-1">
-                Esc
-              </kbd>{" "}
-              to clear
-            </p>
-          </div>
+          <FileUpload
+            onFileUpload={handleFileUpload}
+            setFile={setFile}
+            isLoading={chatLoading}
+            fileUploadLoading={fileUploadLoading}
+          />
+
+          <StatusBar
+            chatLoading={chatLoading}
+            fileUploadLoading={fileUploadLoading}
+            collectionStatus={collectionStatus}
+          />
         </div>
       </div>
-    </div>
+      <div className="text-center mt-6">
+        <p className="text-gray-400 text-sm">
+          Press{" "}
+          <kbd className="px-2 py-1 bg-white/10 rounded text-xs">Enter</kbd> to
+          send •
+          <kbd className="px-2 py-1 bg-white/10 rounded text-xs ml-1">Esc</kbd>{" "}
+          to clear
+        </p>
+      </div>
+    </>
   );
 }
 
