@@ -2,6 +2,7 @@ import { Bot, MessageCircle, Database } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 const Message = ({ message }) => {
+  console.log(message);
   const renderMessageContent = () => {
     if (message.role === "user") {
       return <p className="text-gray-100">{message.content}</p>;
@@ -85,6 +86,7 @@ export const markdownComponents = {
   code: ({ inline, children, className, ...props }) => {
     const match = /language-(\w+)/.exec(className || "");
     const language = match ? match[1] : "";
+    console.log(language);
     if (!inline) {
       return (
         <div className="my-4 rounded-xl overflow-hidden border border-purple-500/30 shadow-xl">

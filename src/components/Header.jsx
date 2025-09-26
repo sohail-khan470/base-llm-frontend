@@ -1,9 +1,17 @@
-import { Bot, Sparkles, Trash2 } from "lucide-react";
+import { Bot, Sparkles, Trash2, Menu } from "lucide-react";
 
-const Header = ({ collectionStatus, onClearCollection }) => {
+const Header = ({ collectionStatus, onClearCollection, onMenuClick }) => {
   return (
     <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
       <div className="flex items-center gap-2 sm:gap-3">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="md:hidden p-2 text-gray-400 hover:text-white"
+          >
+            <Menu size={24} />
+          </button>
+        )}
         <div className="relative">
           <Bot className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-blue-400" />
           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
