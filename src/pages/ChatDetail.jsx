@@ -141,9 +141,14 @@ export default function ChatDetail() {
           }
 
           try {
-            const { token } = JSON.parse(payload);
-            aiResponse += token;
-            setCurrentResponse(aiResponse);
+            const data = JSON.parse(payload);
+            if (data.token !== undefined) {
+              aiResponse += data.token;
+              setCurrentResponse(aiResponse);
+            } else if (data.chatId) {
+              // Handle chatId if needed
+              console.log("Received chatId:", data.chatId);
+            }
           } catch (err) {
             console.error("Failed to parse SSE payload:", payload, err);
           }
@@ -202,12 +207,6 @@ export default function ChatDetail() {
 
       <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
         <div className="p-4 border-b border-white/10">
-          <button
-            onClick={() => navigate("/")}
-            className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-2"
-          >
-            ← Back to Chats
-          </button>
           <h2 className="text-white text-xl font-bold">
             {chat?.title || "Chat Details"}
           </h2>

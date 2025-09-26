@@ -154,9 +154,14 @@ function Home() {
           }
 
           try {
-            const { token } = JSON.parse(payload);
-            aiResponse += token;
-            setCurrentResponse(aiResponse);
+            const data = JSON.parse(payload);
+            if (data.token !== undefined) {
+              aiResponse += data.token;
+              setCurrentResponse(aiResponse);
+            } else if (data.chatId) {
+              // Handle chatId if needed
+              console.log("Received chatId:", data.chatId);
+            }
           } catch (err) {
             console.error("Failed to parse SSE payload:", payload, err);
           }
