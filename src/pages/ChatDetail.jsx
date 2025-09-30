@@ -9,40 +9,28 @@ import BackgroundEffects from "../components/BackgroundEffects";
 import LoadingSpinner from "../components/LoadingSpinner";
 import "../App.css";
 import api from "../api/api";
+import { useChatListStore } from "../store/chat-list-store";
+import { useChatStore } from "../store/chat-store";
+import { useMessageStore } from "../store/message-store";
 
 export default function ChatDetail() {
-  const { chatId } = useParams();
   const navigate = useNavigate();
-  const [chat, setChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState("");
   const responseRef = useRef(null);
   const abortCtrlRef = useRef(null);
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3008/api";
+  const { chatId } = useParams();
+  // const { fetchMessagesByChat, loading, error } = useMessageStore();
+  const { chat, fetchChat, messages, loading, error } = useChatStore();
 
   useEffect(() => {
-    async function fetchChat() {
-      try {
-        console.log("Fetching chat with ID:", chatId);
-        const data = await api.get(`/ai/chats/${chatId}`);
-        console.log("Chat data received:", data);
-        setChat(data.chat);
-        setMessages(data.messages || []);
-      } catch (err) {
-        console.error("Failed to fetch chat:", err);
-        setError(`Failed to load chat: ${err.message || err}`);
-      } finally {
-        setLoading(false);
-      }
-    }
     if (chatId) {
-      fetchChat();
+      fetchChat(chatId);
     }
-  }, [chatId]);
+    return;
+  }, [chatId, fetchChat]);
 
   useEffect(() => {
     if (responseRef.current) {
@@ -62,7 +50,8 @@ export default function ChatDetail() {
       content: prompt,
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    // Note: We'll let the backend handle message saving
+    // setMessages((prev) => [...prev, userMessage]);
 
     if (abortCtrlRef.current) {
       abortCtrlRef.current.abort();
@@ -108,11 +97,14 @@ export default function ChatDetail() {
               content: aiResponse,
               timestamp: new Date(),
             };
-            setMessages((prev) => [...prev, aiMessage]);
+            // Messages will be updated when we refetch the chat
+            // setMessages((prev) => [...prev, aiMessage]);
           }
           setCurrentResponse("");
           setChatLoading(false);
           abortCtrlRef.current = null;
+          // Refetch chat to get updated messages
+          fetchChat(chatId);
           break;
         }
 
@@ -132,11 +124,14 @@ export default function ChatDetail() {
                 content: aiResponse,
                 timestamp: new Date(),
               };
-              setMessages((prev) => [...prev, aiMessage]);
+              // Messages will be updated when we refetch the chat
+              // setMessages((prev) => [...prev, aiMessage]);
             }
             setCurrentResponse("");
             setChatLoading(false);
             abortCtrlRef.current = null;
+            // Refetch chat to get updated messages
+            fetchChat(chatId);
             return;
           }
 
@@ -163,7 +158,8 @@ export default function ChatDetail() {
           timestamp: new Date(),
           isError: true,
         };
-        setMessages((prev) => [...prev, errorMessage]);
+        // Handle error message display differently
+        console.error("Chat error:", err);
         setChatLoading(false);
       }
       abortCtrlRef.current = null;

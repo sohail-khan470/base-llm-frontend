@@ -11,7 +11,7 @@ export default function Layout({ children }) {
     if (chatId === "new") {
       navigate("/");
     } else {
-      navigate(`/chat/${chatId}`);
+      navigate(`/chats/${chatId}`);
     }
     setSidebarOpen(false);
   };
