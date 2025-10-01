@@ -50,13 +50,14 @@ export default function Sidebar({ isOpen, onClose, onSelectConversation }) {
           </div>
 
           <div className="flex space-x-2">
+            {/*
             <button
               onClick={() => setShowProfile(true)}
               className="flex-1 flex items-center justify-center space-x-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <Settings className="w-4 h-4" />
-              <span className="text-sm">Profile</span>
-            </button>
+               <Settings className="w-4 h-4" />
+              <span className="text-sm">Profile</span> 
+            </button> */}
             <button
               onClick={handleLogout}
               className="flex-1 flex items-center justify-center space-x-1 py-2 px-3 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
