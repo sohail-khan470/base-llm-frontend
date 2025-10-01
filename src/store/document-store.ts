@@ -20,6 +20,15 @@ export interface UploadProgress {
   error?: string;
 }
 
+export interface UploadResponse {
+  message: string;
+  fileName: string;
+  fileSize: number;
+  chunksStored: number;
+  qa?: any;
+  document: Document;
+}
+
 interface DocumentState {
   documents: Document[];
   loading: boolean;
@@ -31,7 +40,7 @@ interface DocumentState {
   uploadDocument: (
     file: File,
     onProgress?: (progress: number) => void
-  ) => Promise<Document>;
+  ) => Promise<any>;
   deleteDocument: (docId: string) => Promise<void>;
   clearError: () => void;
   clearUploadProgress: (filename: string) => void;
@@ -67,6 +76,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     const filename = file.name;
 
     // Add upload progress tracking
+    console.log("Starting upload for file:", filename);
     set((state) => ({
       uploadProgress: [
         ...state.uploadProgress.filter((p) => p.filename !== filename),
@@ -78,16 +88,21 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       const formData = new FormData();
       formData.append("file", file);
 
+      console.log("Sending file upload request:", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        formDataEntries: Array.from(formData.entries()),
+      });
+
       const response = await api.post("/ai/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const progress = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
 
+            console.log("Upload progress for", filename, ":", progress + "%");
             // Update progress
             set((state) => ({
               uploadProgress: state.uploadProgress.map((p) =>
@@ -109,6 +124,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       });
 
       // Mark as completed
+      console.log("Marking upload as completed for file:", filename);
       set((state) => ({
         uploadProgress: state.uploadProgress.map((p) =>
           p.filename === filename
@@ -120,9 +136,18 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       // Refresh documents list
       await get().fetchDocuments();
 
-      return response.data.document;
+      console.log("Upload response:", response);
+      console.log("Upload response data:", response.data);
+      return response;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || "Upload failed";
+      console.error("Upload error:", err);
+      console.error("Error response:", err.response);
+      console.error("Error data:", err.response?.data);
+      const errorMessage =
+        err.response?.data?.error ||
+        err.message ||
+        err.toString() ||
+        "Upload failed";
 
       // Mark as error
       set((state) => ({
@@ -134,6 +159,16 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         error: errorMessage,
       }));
 
+      console.error(
+        "Setting upload error state for file:",
+        filename,
+        "with error:",
+        errorMessage
+      );
+      console.error("Full error object:", err);
+
+      console.error("Throwing error for file:", filename);
+      console.error("Final error object before throw:", err);
       throw err;
     }
   },

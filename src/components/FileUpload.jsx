@@ -1,14 +1,48 @@
 import { Upload } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
+import { useDocumentStore } from "../store/document-store";
+import { useState } from "react";
 
-const FileUpload = ({
-  onFileUpload,
-  setFile,
-  isLoading,
-  fileUploadLoading,
-}) => {
+const FileUpload = ({ onUploadSuccess, onUploadError, isLoading }) => {
+  const [file, setFile] = useState(null);
+  const { uploadDocument, uploadProgress } = useDocumentStore();
+  const fileUploadLoading = uploadProgress.some(
+    (p) => p.status === "uploading"
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file || fileUploadLoading) return;
+
+    console.log("FileUpload component - Starting upload for file:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
+    try {
+      const result = await uploadDocument(file);
+      console.log("Upload successful:", result);
+      console.log("Result data:", result.data);
+      onUploadSuccess && onUploadSuccess(result, file);
+      setFile(null);
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = "";
+    } catch (err) {
+      console.error("Upload component error:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        stack: err.stack,
+      });
+      onUploadError && onUploadError(err);
+    }
+  };
+
   return (
-    <form onSubmit={onFileUpload} className="flex gap-2 sm:gap-4">
+    <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4">
       <div className="flex-1 relative">
         <input
           type="file"

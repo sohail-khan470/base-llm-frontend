@@ -12,12 +12,11 @@ import BackgroundEffects from "../components/BackgroundEffects";
 import LoadingSpinner from "../components/LoadingSpinner";
 import "../App.css";
 import api from "../api/api";
+import { useDocumentStore } from "../store/document-store";
 
 function Home() {
   const [prompt, setPrompt] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const [fileUploadLoading, setFileUploadLoading] = useState(false);
-  const [file, setFile] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [currentResponse, setCurrentResponse] = useState("");
   const [collectionStatus, setCollectionStatus] = useState({
@@ -35,6 +34,11 @@ function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3008/api";
+
+  const { uploadProgress } = useDocumentStore();
+  const fileUploadLoading = uploadProgress.some(
+    (p) => p.status === "uploading"
+  );
 
   // Fetch collection status on mount
   useEffect(() => {
@@ -176,6 +180,7 @@ function Home() {
           timestamp: new Date(),
           isError: true,
         };
+        console.log("Adding error message to conversations");
         setConversations((prev) => [...prev, errorMessage]);
         setChatLoading(false);
       }
@@ -185,44 +190,51 @@ function Home() {
     setPrompt("");
   };
 
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    if (!file || fileUploadLoading) return;
+  const handleUploadSuccess = (result, file) => {
+    console.log("Upload success:", result);
+    console.log("Success result data:", result.data);
+    fetchCollectionStatus();
+    console.log(
+      "Creating success message for file:",
+      file.name,
+      "with chunks:",
+      result.data?.chunksStored || 0
+    );
+    console.log("Upload result structure:", result);
+    console.log(
+      "Chunks stored:",
+      result?.chunksStored || result?.data?.chunksStored || 0
+    );
+    const successMessage = {
+      role: "system",
+      content: `File "${file.name}" uploaded successfully! ${
+        result?.chunksStored || result?.data?.chunksStored || 0
+      } chunks processed.`,
+      timestamp: new Date(),
+      isSystem: true,
+    };
+    setConversations((prev) => [...prev, successMessage]);
+  };
 
-    setFileUploadLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const result = await api.post("/ai/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      fetchCollectionStatus();
-
-      const successMessage = {
-        role: "system",
-        content: `File "${file.name}" uploaded successfully! ${result.chunksStored} chunks processed.`,
-        timestamp: new Date(),
-        isSystem: true,
-      };
-      setConversations((prev) => [...prev, successMessage]);
-      setFile(null);
-
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) fileInput.value = "";
-    } catch (err) {
-      console.error("File upload error:", err);
-      const errorMessage = {
-        role: "system",
-        content: `Error: ${err}`,
-        timestamp: new Date(),
-        isError: true,
-      };
-      setConversations((prev) => [...prev, errorMessage]);
-    } finally {
-      setFileUploadLoading(false);
-    }
+  const handleUploadError = (err) => {
+    console.error("File upload error:", err);
+    console.error("Error details:", {
+      message: err.message,
+      response: err.response,
+      status: err.response?.status,
+      data: err.response?.data,
+      stack: err.stack,
+    });
+    console.log("Creating error message for upload failure");
+    const errorMessage = {
+      role: "system",
+      content: `Upload Error: ${
+        err.response?.data?.error || err.message || err
+      }`,
+      timestamp: new Date(),
+      isError: true,
+    };
+    setConversations((prev) => [...prev, errorMessage]);
   };
 
   const clearCollection = async () => {
@@ -308,10 +320,9 @@ function Home() {
           />
 
           <FileUpload
-            onFileUpload={handleFileUpload}
-            setFile={setFile}
+            onUploadSuccess={handleUploadSuccess}
+            onUploadError={handleUploadError}
             isLoading={chatLoading}
-            fileUploadLoading={fileUploadLoading}
           />
 
           <StatusBar
