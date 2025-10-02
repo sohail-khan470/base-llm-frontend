@@ -67,7 +67,7 @@ const Message = ({ message }) => {
     >
       <div className="flex-shrink-0">{getMessageIcon()}</div>
       <div
-        className={`flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[80%] ${getMessageStyle()}`}
+        className={`flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[90%] sm:max-w-[80%] ${getMessageStyle()}`}
       >
         {renderMessageContent()}
       </div>

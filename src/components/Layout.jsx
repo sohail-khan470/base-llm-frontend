@@ -20,7 +20,9 @@ export default function Layout({ children }) {
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Menu button */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 bg-gray-900/95 backdrop-blur-lg border border-white/10 rounded-lg text-white hover:bg-gray-800"
+        className={`fixed top-4 left-4 z-50 p-2 bg-gray-900/95 backdrop-blur-lg border border-white/10 rounded-lg text-white hover:bg-gray-800 ${
+          sidebarOpen ? "hidden" : ""
+        }`}
         onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         <Menu size={20} />
@@ -32,7 +34,13 @@ export default function Layout({ children }) {
           onClose={() => setSidebarOpen(false)}
           onSelectConversation={handleSelectConversation}
         />
-        <div className="flex flex-col flex-1 ml-4">{children}</div>
+        <div
+          className={`flex flex-col flex-1 transition-all duration-300 ${
+            sidebarOpen ? "ml-0 sm:ml-64" : "ml-0"
+          }`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
