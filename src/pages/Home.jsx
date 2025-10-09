@@ -33,7 +33,7 @@ function Home() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3008/api";
+  const API_BASE = "/api/ai/chat";
 
   const { uploadProgress } = useDocumentStore();
   const fileUploadLoading = uploadProgress.some(
@@ -56,7 +56,7 @@ function Home() {
 
   const fetchCollectionStatus = async () => {
     try {
-      const data = await api.get("/ai/collection-status");
+      const data = await api.get("ai/collection-status");
       setCollectionStatus(data);
     } catch (err) {
       console.error("Error fetching collection status:", err);
@@ -87,7 +87,7 @@ function Home() {
     }
     abortCtrlRef.current = new AbortController();
 
-    const sseUrl = `${API_BASE}/ai/chat`;
+    const sseUrl = API_BASE;
     const body = JSON.stringify({
       prompt,
       useContext: true,

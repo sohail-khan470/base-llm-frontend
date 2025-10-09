@@ -20,7 +20,7 @@ export default function ChatDetail() {
   const [currentResponse, setCurrentResponse] = useState("");
   const responseRef = useRef(null);
   const abortCtrlRef = useRef(null);
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3008/api";
+  const API_BASE = `/api/ai/chat`;
   const { chatId } = useParams();
   // const { fetchMessagesByChat, loading, error } = useMessageStore();
   const { chat, fetchChat, messages, loading, error } = useChatStore();
@@ -58,7 +58,7 @@ export default function ChatDetail() {
     }
     abortCtrlRef.current = new AbortController();
 
-    const sseUrl = `${API_BASE}/ai/chat`;
+    const sseUrl = API_BASE;
     const body = JSON.stringify({
       prompt,
       chatId,

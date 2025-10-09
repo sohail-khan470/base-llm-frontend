@@ -15,8 +15,6 @@ function App() {
     initializeAuth();
   }, [initializeAuth]);
 
-  console.log(user, "UUUUUUUUU");
-
   return (
     // <Layout>
     <Routes>
