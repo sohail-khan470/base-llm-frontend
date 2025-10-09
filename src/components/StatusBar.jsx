@@ -18,13 +18,13 @@ const StatusBar = ({ chatLoading, fileUploadLoading, collectionStatus }) => {
         </span>
       </div>
 
-      <div className="text-xs text-gray-500">
+      {/* <div className="text-xs text-gray-500">
         {collectionStatus.exists ? (
           <span>Knowledge base: {collectionStatus.count} embeddings</span>
         ) : (
           <span>No knowledge base yet</span>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
