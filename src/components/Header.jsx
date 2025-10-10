@@ -17,7 +17,7 @@ const Header = ({ collectionStatus, onClearCollection, onMenuClick }) => {
           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
         </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          Ollama Chat
+          Nova Chat
         </h1>
       </div>
 
