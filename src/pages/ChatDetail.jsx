@@ -38,16 +38,17 @@ export default function ChatDetail() {
     }
   }, [messages, currentResponse]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, inputPrompt) => {
     e.preventDefault();
-    if (!prompt.trim() || chatLoading) return;
+    const promptToSend = inputPrompt || prompt;
+    if (!promptToSend.trim() || chatLoading) return;
 
     setChatLoading(true);
     setCurrentResponse("");
 
     const userMessage = {
       role: "user",
-      content: prompt,
+      content: promptToSend,
       timestamp: new Date(),
     };
     // Note: We'll let the backend handle message saving
@@ -201,8 +202,8 @@ export default function ChatDetail() {
         onClearCollection={() => {}}
       />
 
-      <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/10">
+      <div className="flex-1 flex flex-col bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden">
+        <div className="p-3 sm:p-4 border-b border-white/10">
           <h2 className="text-white text-xl font-bold">
             {chat?.title || "Chat Details"}
           </h2>
@@ -213,7 +214,7 @@ export default function ChatDetail() {
 
         <div
           ref={responseRef}
-          className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4"
+          className="flex-1 overflow-y-auto p-2 sm:p-3 lg:p-6 space-y-3 sm:space-y-4"
         >
           {messages.length > 0 ? (
             <div className="space-y-6">
@@ -238,7 +239,7 @@ export default function ChatDetail() {
           {chatLoading && !currentResponse && <ThinkingMessage />}
         </div>
 
-        <div className="p-3 sm:p-4 lg:p-6 border-t border-white/10 bg-white/5">
+        <div className="p-2 sm:p-3 lg:p-6 border-t border-white/10 bg-white/5">
           <ChatInput
             prompt={prompt}
             setPrompt={setPrompt}

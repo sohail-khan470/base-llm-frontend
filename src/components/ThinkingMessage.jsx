@@ -8,7 +8,7 @@ const ThinkingMessage = () => {
           <Bot className="w-6 h-6 text-white" />
         </div>
       </div>
-      <div className="flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[90%] sm:max-w-[80%] bg-white/5 border-white/10">
+      <div className="flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[90%] sm:max-w-[80%] bg-white/5 border-white/10 break-words">
         <div className="flex items-center gap-3">
           <span className="text-gray-300">AI is thinking</span>
           <div className="flex gap-1">
