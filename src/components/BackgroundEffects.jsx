@@ -110,17 +110,8 @@
 const BackgroundEffects = () => {
   return (
     <div className="fixed inset-0 -z-50 overflow-hidden bg-black">
-      {/* Subtle gradient similar to ChatGPT */}
-      <div className="absolute inset-0 bg-gradient-radial from-[#111827] via-black to-black" />
-      <style jsx>{`
-        .bg-gradient-radial {
-          background: radial-gradient(
-            circle at center,
-            rgba(17, 24, 39, 0.6) 0%,
-            rgba(0, 0, 0, 1) 100%
-          );
-        }
-      `}</style>
+      {/* Subtle solid color similar to ChatGPT */}
+      <div className="absolute inset-0 bg-[#111827]" />
     </div>
   );
 };

@@ -4,7 +4,7 @@ const ThinkingMessage = () => {
   return (
     <div className="flex gap-4 animate-fade-in">
       <div className="flex-shrink-0">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
           <Bot className="w-6 h-6 text-white" />
         </div>
       </div>

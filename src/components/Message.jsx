@@ -22,7 +22,7 @@ const Message = ({ message }) => {
   const getMessageIcon = () => {
     if (message.role === "user") {
       return (
-        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
           <MessageCircle className="w-6 h-6 text-white" />
         </div>
       );
@@ -30,14 +30,14 @@ const Message = ({ message }) => {
 
     if (message.isSystem) {
       return (
-        <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
+        <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
           <Database className="w-6 h-6 text-white" />
         </div>
       );
     }
 
     return (
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
         <Bot className="w-6 h-6 text-white" />
       </div>
     );

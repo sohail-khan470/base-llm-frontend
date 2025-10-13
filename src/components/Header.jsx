@@ -20,7 +20,7 @@ const Header = ({ collectionStatus, onClearCollection, onMenuClick }) => {
       </div>
 
       {/* Center Title */}
-      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
+      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-blue-400 text-center">
         Nova Chat
       </h1>
 
