@@ -19,26 +19,24 @@ const ChatInput = ({
   };
 
   return (
-    <form
-      onSubmit={handleLocalSubmit}
-      className="flex gap-1 sm:gap-2 lg:gap-4 mb-3 sm:mb-4"
-    >
+    <form onSubmit={handleLocalSubmit} className="flex gap-2 mb-4">
       <div className="flex-1 relative">
         <input
           type="text"
-          className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl lg:rounded-2xl px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 pr-8 sm:pr-10 lg:pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 hover:bg-white/15 text-sm sm:text-base"
+          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Type your message here..."
           disabled={isLoading || fileUploadLoading}
         />
-        <div className="absolute right-2 sm:right-3 lg:right-4 top-1/2 transform -translate-y-1/2">
-          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          <MessageCircle className="w-5 h-5 text-gray-400" />
         </div>
       </div>
+
       <button
         type="submit"
-        className="group bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95"
         disabled={isLoading || fileUploadLoading || !prompt.trim()}
       >
         {isLoading ? (
@@ -50,7 +48,7 @@ const ChatInput = ({
           </>
         ) : (
           <>
-            <Send className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-200" />
+            <Send className="w-5 h-5 transition-transform duration-150 group-hover:translate-x-1" />
             <span className="hidden md:inline font-medium text-sm sm:text-base">
               Send
             </span>
