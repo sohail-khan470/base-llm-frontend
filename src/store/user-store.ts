@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import api from "../api/api";
 
 export interface UserProfile {
@@ -87,175 +86,157 @@ const defaultPreferences: UserPreferences = {
   },
 };
 
-export const useUserStore = create<UserState>()(
-  persist(
-    (set, get) => ({
-      profile: null,
-      loading: false,
-      error: null,
+export const useUserStore = create<UserState>()((set, get) => ({
+  profile: null,
+  loading: false,
+  error: null,
 
-      fetchProfile: async () => {
-        try {
-          set({ loading: true, error: null });
-          const response = await api.get("/auth/me");
-          const profile = response.data.user || response.data;
+  fetchProfile: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await api.get("/auth/me");
+      const profile = response.data.user || response.data;
 
-          // Merge with default preferences if not set
-          const profileWithDefaults = {
-            ...profile,
-            preferences: {
-              ...defaultPreferences,
-              ...profile.preferences,
-            },
-          };
+      // Merge with default preferences if not set
+      const profileWithDefaults = {
+        ...profile,
+        preferences: {
+          ...defaultPreferences,
+          ...profile.preferences,
+        },
+      };
 
-          set({
-            profile: profileWithDefaults,
-            loading: false,
-          });
-        } catch (err: any) {
-          set({
-            error: err.response?.data?.error || "Failed to fetch profile",
-            loading: false,
-          });
-        }
-      },
+      set({
+        profile: profileWithDefaults,
+        loading: false,
+      });
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.error || "Failed to fetch profile",
+        loading: false,
+      });
+    }
+  },
 
-      updateProfile: async (updates: Partial<UserProfile>) => {
-        try {
-          set({ loading: true, error: null });
-          const response = await api.put("/auth/profile", updates);
-          const updatedProfile = response.data.user || response.data;
+  updateProfile: async (updates: Partial<UserProfile>) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await api.put("/auth/profile", updates);
+      const updatedProfile = response.data.user || response.data;
 
-          set((state) => ({
-            profile: state.profile
-              ? { ...state.profile, ...updatedProfile }
-              : updatedProfile,
-            loading: false,
-          }));
-        } catch (err: any) {
-          set({
-            error: err.response?.data?.error || "Failed to update profile",
-            loading: false,
-          });
-          throw err;
-        }
-      },
+      set((state) => ({
+        profile: state.profile
+          ? { ...state.profile, ...updatedProfile }
+          : updatedProfile,
+        loading: false,
+      }));
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.error || "Failed to update profile",
+        loading: false,
+      });
+      throw err;
+    }
+  },
 
-      updatePreferences: async (preferences: Partial<UserPreferences>) => {
-        try {
-          set({ error: null });
-          const response = await api.put("/auth/preferences", { preferences });
-          const updatedPreferences = response.data.preferences || preferences;
+  updatePreferences: async (preferences: Partial<UserPreferences>) => {
+    try {
+      set({ error: null });
+      const response = await api.put("/auth/preferences", { preferences });
+      const updatedPreferences = response.data.preferences || preferences;
 
-          set((state) => ({
-            profile: state.profile
-              ? {
-                  ...state.profile,
-                  preferences: {
-                    ...state.profile.preferences,
-                    ...updatedPreferences,
-                  },
-                }
-              : null,
-          }));
-        } catch (err: any) {
-          set({
-            error: err.response?.data?.error || "Failed to update preferences",
-          });
-          throw err;
-        }
-      },
-
-      changePassword: async (currentPassword: string, newPassword: string) => {
-        try {
-          set({ loading: true, error: null });
-          await api.put("/auth/change-password", {
-            currentPassword,
-            newPassword,
-          });
-          set({ loading: false });
-        } catch (err: any) {
-          set({
-            error: err.response?.data?.error || "Failed to change password",
-            loading: false,
-          });
-          throw err;
-        }
-      },
-
-      deleteAccount: async (password: string) => {
-        try {
-          set({ loading: true, error: null });
-          await api.delete("/auth/account", {
-            data: { password },
-          });
-
-          // Clear all user data
-          set({
-            profile: null,
-            loading: false,
-          });
-        } catch (err: any) {
-          set({
-            error: err.response?.data?.error || "Failed to delete account",
-            loading: false,
-          });
-          throw err;
-        }
-      },
-
-      clearError: () => {
-        set({ error: null });
-      },
-
-      // Utility functions
-      getPreference: <K extends keyof UserPreferences>(key: K) => {
-        const profile = get().profile;
-        return profile?.preferences?.[key] || defaultPreferences[key];
-      },
-
-      setPreference: <K extends keyof UserPreferences>(
-        key: K,
-        value: UserPreferences[K]
-      ) => {
-        set((state) => ({
-          profile: state.profile
-            ? {
-                ...state.profile,
-                preferences: {
-                  ...state.profile.preferences,
-                  [key]: value,
-                },
-              }
-            : null,
-        }));
-      },
-
-      resetPreferences: () => {
-        set((state) => ({
-          profile: state.profile
-            ? {
-                ...state.profile,
-                preferences: { ...defaultPreferences },
-              }
-            : null,
-        }));
-      },
-    }),
-    {
-      name: "user-storage",
-      // Only persist preferences and basic profile info
-      partialize: (state) => ({
+      set((state) => ({
         profile: state.profile
           ? {
-              _id: state.profile._id,
-              email: state.profile.email,
-              organizationId: state.profile.organizationId,
-              preferences: state.profile.preferences,
+              ...state.profile,
+              preferences: {
+                ...state.profile.preferences,
+                ...updatedPreferences,
+              },
             }
           : null,
-      }),
+      }));
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.error || "Failed to update preferences",
+      });
+      throw err;
     }
-  )
-);
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      set({ loading: true, error: null });
+      await api.put("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      set({ loading: false });
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.error || "Failed to change password",
+        loading: false,
+      });
+      throw err;
+    }
+  },
+
+  deleteAccount: async (password: string) => {
+    try {
+      set({ loading: true, error: null });
+      await api.delete("/auth/account", {
+        data: { password },
+      });
+
+      // Clear all user data
+      set({
+        profile: null,
+        loading: false,
+      });
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.error || "Failed to delete account",
+        loading: false,
+      });
+      throw err;
+    }
+  },
+
+  clearError: () => {
+    set({ error: null });
+  },
+
+  // Utility functions
+  getPreference: <K extends keyof UserPreferences>(key: K) => {
+    const profile = get().profile;
+    return profile?.preferences?.[key] || defaultPreferences[key];
+  },
+
+  setPreference: <K extends keyof UserPreferences>(
+    key: K,
+    value: UserPreferences[K]
+  ) => {
+    set((state) => ({
+      profile: state.profile
+        ? {
+            ...state.profile,
+            preferences: {
+              ...state.profile.preferences,
+              [key]: value,
+            },
+          }
+        : null,
+    }));
+  },
+
+  resetPreferences: () => {
+    set((state) => ({
+      profile: state.profile
+        ? {
+            ...state.profile,
+            preferences: { ...defaultPreferences },
+          }
+        : null,
+    }));
+  },
+}));
