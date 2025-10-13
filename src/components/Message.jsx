@@ -67,7 +67,7 @@ const Message = ({ message }) => {
     >
       <div className="flex-shrink-0">{getMessageIcon()}</div>
       <div
-        className={`flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[90%] sm:max-w-[80%] break-words ${getMessageStyle()}`}
+        className={`flex-1 backdrop-blur-sm border rounded-2xl p-4 max-w-[90%] sm:max-w-[80%] break-words overflow-hidden ${getMessageStyle()}`}
       >
         {renderMessageContent()}
       </div>
@@ -100,7 +100,7 @@ export const markdownComponents = {
               <div className="w-3 h-3 rounded-full bg-green-400/70"></div>
             </div>
           </div>
-          <pre className="bg-slate-900/90 backdrop-blur-sm p-4 overflow-x-auto">
+          <pre className="bg-slate-900/90 backdrop-blur-sm p-4 whitespace-pre-wrap break-words">
             <code
               className="text-gray-100 font-mono text-sm leading-relaxed block"
               {...props}
