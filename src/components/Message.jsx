@@ -147,16 +147,17 @@ export const markdownComponents = {
   ),
   ul: ({ node, ...props }) => (
     <ul
-      className="list-disc list-inside mb-3 text-gray-100 space-y-1 text-sm sm:text-base"
+      className="list-disc list-outside pl-4 sm:pl-6 mb-3 text-gray-100 space-y-1 text-sm sm:text-base"
       {...props}
     />
   ),
   ol: ({ node, ...props }) => (
     <ol
-      className="list-decimal list-inside mb-3 text-gray-100 space-y-1 text-sm sm:text-base"
+      className="list-decimal list-outside pl-4 sm:pl-6 mb-3 text-gray-100 space-y-1 text-sm sm:text-base"
       {...props}
     />
   ),
+  li: ({ node, ...props }) => <li className="ml-4 sm:ml-6" {...props} />,
   blockquote: ({ node, ...props }) => (
     <blockquote
       className="border-l-4 border-purple-500 pl-4 italic text-gray-300 my-3 text-sm sm:text-base"
