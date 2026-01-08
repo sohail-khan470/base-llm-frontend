@@ -5,6 +5,8 @@ import Home from "./pages/Home";
 import ChatDetail from "./pages/ChatDetail";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import OrganizationRegister from "./pages/OrganizationRegister";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthStore } from "./store/auth-store";
 
@@ -21,6 +23,7 @@ function App() {
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/register-org" element={<OrganizationRegister />} />
 
       {/* Protected Routes */}
       <Route
@@ -43,6 +46,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     // </Layout>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 
 export default function Login() {
@@ -13,8 +13,10 @@ export default function Login() {
     e.preventDefault();
     await login(email, password);
 
-    if (!error) {
-      navigate("/"); // redirect to home after login
+    // Check if login was successful by checking if there's no error and token exists
+    const { token } = useAuthStore.getState();
+    if (!error && token) {
+      navigate("/", { replace: true }); // redirect to home after login
     }
   };
 
@@ -53,6 +55,13 @@ export default function Login() {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+
+        <p className="text-center text-sm">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-blue-500 hover:underline">
+            Sign up
+          </Link>
+        </p>
       </form>
     </div>
   );

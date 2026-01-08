@@ -55,12 +55,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       set({ loading: true, error: null });
       await api.post("/auth/register", { email, password, organizationId });
-
-      // Call login directly instead of through getState()
-      const res = await api.post("/auth/login", { email, password });
-      console.log(res);
-      localStorage.setItem("authToken", res.data.token);
-      set({ user: res.data.user, token: res.data.token, loading: false });
+      set({ loading: false });
+      // Do not auto-login, just return success
     } catch (err: any) {
       set({
         error: err.response?.data?.error || "Signup failed",

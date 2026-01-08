@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import { useOrganizationStore } from "../store/organization-store";
 
@@ -27,7 +27,8 @@ export default function Signup() {
     await signup(email, password, selectedOrg);
 
     if (!error) {
-      navigate("/"); // redirect to home after signup
+      alert("Signup successful! Please login.");
+      navigate("/login"); // redirect to login page after signup
     }
   };
 
@@ -81,6 +82,13 @@ export default function Signup() {
         >
           {loading ? "Signing up..." : "Signup"}
         </button>
+
+        <p className="text-center text-sm">
+          Don't have an organization?{" "}
+          <Link to="/register-org" className="text-blue-500 hover:underline">
+            Register Organization
+          </Link>
+        </p>
       </form>
     </div>
   );
