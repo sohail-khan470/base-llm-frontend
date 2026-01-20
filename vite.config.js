@@ -7,11 +7,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    allowedHosts: [
-      ".ts.net", // allows any Tailscale host
-      "localhost",
-      ".local",
-    ],
+    allowedHosts: ["localhost", ".local"],
     proxy: {
       "/api": {
         target: "http://localhost:3008",
